@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the source code from SCM (e.g., Git)
-                git branch: 'main', url: 'file:///path/to/your/sample-node-app' // Replace with your actual path or remote Git URL
+                git branch: 'main', url: 'https://github.com/sanvi-verma/183_sanvii' // Replace with your actual path or remote Git URL
             }
         }
 
