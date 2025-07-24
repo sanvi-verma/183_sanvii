@@ -38,28 +38,6 @@ pipeline {
             }
         }
 
-        stage('Docker Build Application Image') {
-            steps {
-                script {
-                    // Build a Docker image for your application
-                    // This requires a Dockerfile in your sample-node-app directory
-                    // Example Dockerfile for the Node.js app:
-                    // FROM node:18-alpine
-                    // WORKDIR /app
-                    // COPY package*.json ./
-                    // RUN npm install --production
-                    // COPY . .
-                    // EXPOSE 3000
-                    // CMD ["node", "app.js"]
-
-                    // Build the application Docker image using the host's Docker daemon
-                    sh 'docker build -t my-node-app:latest .'
-                    // Optional: Push to a Docker registry
-                    // sh 'docker push my-node-app:latest'
-                }
-            }
-        }
-
         stage('Deploy (Simulated)') {
             steps {
                 script {
