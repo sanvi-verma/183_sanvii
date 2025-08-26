@@ -5,8 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo '📥 Getting code...'
-                // Use your Git repo here if needed:
-                // git branch: 'main', url: 'https://github.com/your/repo.git'
+                git branch: 'main', url: 'https://github.com/sanvi-verma/183_sanvii'
             }
         }
 
