@@ -1,37 +1,31 @@
 pipeline {
-    agent any
-
-    stages {
-        stage('Checkout') {
-            steps {
-                echo '📥 Getting code...'
-                git branch: 'main', url: 'https://github.com/sanvi-verma/183_sanvii'
-            }
-        }
-
-        stage('Build Image') {
-            steps {
-                echo '🐳 Building Docker image...'
-                sh 'docker build -t myapp:latest ./app'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo '✅ Running basic tests...'
-                sh 'echo "Tests passed (placeholder)"'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo '🚀 Deploying container...'
-                sh '''
-                  docker ps -q --filter name=myapp | grep -q . && docker stop myapp && docker rm myapp || true
-                  docker run -d --name myapp -p 5000:5000 myapp:latest
-                '''
-            }
-        }
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
     }
+    stage('Build Image') {
+      steps {
+        echo '🐳 Building Docker image...'
+        sh 'docker build -t myapp:latest ./app'
+      }
+    }
+    stage('Test') {
+      steps {
+        echo '✅ Tests (placeholder)'
+        sh 'echo "ok"'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        echo '🚀 Deploying...'
+        sh '''
+          docker ps -q --filter name=myapp | grep -q . && docker stop myapp && docker rm myapp || true
+          docker run -d --name myapp -p 5000:5000 myapp:latest
+        '''
+      }
+    }
+  }
 }
-
