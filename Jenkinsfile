@@ -1,28 +1,22 @@
 pipeline {
     agent any
-
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-
-        stage('Build') {
+        stage('Build Image') {
             steps {
-                echo 'Building the project...'
+                sh 'docker build -t myapp:latest ./app'
             }
         }
-
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-            }
-        }
-
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
+                sh '''
+                  docker ps -q --filter name=myapp | grep -q . && docker stop myapp && docker rm myapp || true
+                  docker run -d --name myapp -p 5000:5000 myapp:latest
+                '''
             }
         }
     }
