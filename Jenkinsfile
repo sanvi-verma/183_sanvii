@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Build Image') {
             steps {
-                sh 'docker build -t myapp:latest ./app'
+                sh 'docker build -t myapp:latest jenkins-dockerized-ci/app'
             }
         }
         stage('Deploy') {
