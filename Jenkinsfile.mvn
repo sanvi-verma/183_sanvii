@@ -1,0 +1,60 @@
+pipeline {
+  agent none
+  options {
+    timestamps()
+    skipDefaultCheckout(true)
+  }
+  environment {
+    // keep the Maven cache per-workspace so agents don't fight over shared cache
+    MAVEN_OPTS = '-Dmaven.repo.local=.m2/repository'
+  }
+  stages {
+    stage('Checkout & Snapshot (on compile-node)') {
+      agent { label 'compile' }
+      steps {
+        checkout scm
+        dir('maven-sample') {
+          sh 'mvn -v'
+          // capture the exact source snapshot so test node sees the same files
+          stash name: 'src', includes: '**/*'
+        }
+      }
+    }
+
+    stage('Compile (on compile-node)') {
+      agent { label 'compile' }
+      steps {
+        dir('maven-sample') {
+          // ensure we build from the same stashed snapshot
+          deleteDir()
+          unstash 'src'
+          sh 'mvn -B -DskipTests=true clean package'
+          // keep the jar for reference / download
+          stash name: 'jar', includes: 'target/*.jar'
+        }
+      }
+      post {
+        success {
+          archiveArtifacts artifacts: 'maven-sample/target/*.jar', fingerprint: true
+        }
+      }
+    }
+
+    stage('Test (on test-node)') {
+      agent { label 'test' }
+      steps {
+        dir('maven-sample') {
+          deleteDir()
+          unstash 'src'
+          // run tests; surefire will write XML under target/surefire-reports
+          sh 'mvn -B -DskipTests=false test'
+        }
+      }
+      post {
+        always {
+          junit 'maven-sample/target/surefire-reports/*.xml'
+        }
+      }
+    }
+  }
+}
