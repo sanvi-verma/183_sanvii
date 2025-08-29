@@ -1,21 +1,30 @@
-# Base: Jenkins inbound agent with JDK 17 already configured to run via JNLP
+# Jenkins inbound agent with JDK 17 + Maven 3.9.9
 FROM jenkins/inbound-agent:jdk17
 
 USER root
-# Install curl & tar (if missing) and Maven 3.9.9
+
+# ----- Configurable Maven version -----
+ARG MAVEN_VERSION=3.9.9
+ENV MAVEN_HOME=/opt/maven
+ENV PATH=$PATH:$MAVEN_HOME/bin
+
+# Install curl/tar and Maven (with archive fallback)
 RUN apt-get update \
  && apt-get install -y curl tar \
- && curl -fsSL https://downloads.apache.org/maven/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz \
-    | tar -xz -C /opt \
- && ln -s /opt/apache-maven-3.9.9 /opt/maven \
- && ln -s /opt/maven/bin/mvn /usr/local/bin/mvn \
- && echo 'export MAVEN_HOME=/opt/maven' >> /etc/profile \
- && echo 'export PATH=$PATH:/opt/maven/bin' >> /etc/profile \
+ && set -eux; \
+    TMP_TGZ=/tmp/maven.tgz; \
+    URL_PRIMARY="https://downloads.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
+    URL_FALLBACK="https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
+    (curl -fSL "$URL_PRIMARY"   -o "$TMP_TGZ" || curl -fSL "$URL_FALLBACK" -o "$TMP_TGZ"); \
+    tar -xzf "$TMP_TGZ" -C /opt; \
+    ln -s "/opt/apache-maven-${MAVEN_VERSION}" "$MAVEN_HOME"; \
+    ln -s "$MAVEN_HOME/bin/mvn" /usr/local/bin/mvn; \
+    rm -f "$TMP_TGZ" \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create a working directory for the agent (matches Jenkins node config)
+# Agent workdir must match the Jenkins node config
 ENV AGENT_WORKDIR=/home/jenkins/agent
-RUN mkdir -p $AGENT_WORKDIR && chown -R jenkins:jenkins /home/jenkins
+RUN mkdir -p "$AGENT_WORKDIR" && chown -R jenkins:jenkins /home/jenkins
 
 USER jenkins
 WORKDIR /home/jenkins/agent
