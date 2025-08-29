@@ -1,6 +1,30 @@
 version: "3.8"
 
 services:
+  agent-compile:
+    image: myorg/jenkins-maven-agent:3.9.9
+    container_name: agent-compile
+    environment:
+      - JENKINS_URL=http://jenkins:8080        # internal URL on the compose network
+      - JENKINS_AGENT_NAME=compile-node
+      - JENKINS_SECRET=240519fad482f0a95d72e266fcd3245916b11fdbe2d17ebe88945fed1611b6e2     # we'll paste the real secret in 2.3
+      - JENKINS_WEB_SOCKET=true                # avoids needing port 50000
+    depends_on:
+      - jenkins
+    restart: unless-stopped
+
+  agent-test:
+    image: myorg/jenkins-maven-agent:3.9.9
+    container_name: agent-test
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_NAME=test-node
+      - JENKINS_SECRET=1c5ec0defad3364b5c65381948a1a9c0398cca7dae85a2f8fa258fbfaa1c9606
+      - JENKINS_WEB_SOCKET=true
+    depends_on:
+      - jenkins
+    restart: unless-stopped
+
   dind:
     image: docker:26-dind
     privileged: true
