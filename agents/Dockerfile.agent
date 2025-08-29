@@ -1,0 +1,21 @@
+# Base: Jenkins inbound agent with JDK 17 already configured to run via JNLP
+FROM jenkins/inbound-agent:jdk17
+
+USER root
+# Install curl & tar (if missing) and Maven 3.9.9
+RUN apt-get update \
+ && apt-get install -y curl tar \
+ && curl -fsSL https://downloads.apache.org/maven/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz \
+    | tar -xz -C /opt \
+ && ln -s /opt/apache-maven-3.9.9 /opt/maven \
+ && ln -s /opt/maven/bin/mvn /usr/local/bin/mvn \
+ && echo 'export MAVEN_HOME=/opt/maven' >> /etc/profile \
+ && echo 'export PATH=$PATH:/opt/maven/bin' >> /etc/profile \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create a working directory for the agent (matches Jenkins node config)
+ENV AGENT_WORKDIR=/home/jenkins/agent
+RUN mkdir -p $AGENT_WORKDIR && chown -R jenkins:jenkins /home/jenkins
+
+USER jenkins
+WORKDIR /home/jenkins/agent
